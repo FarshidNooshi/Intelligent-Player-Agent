@@ -31,7 +31,7 @@ class NeuralNetwork:
         :return: Output vector
         """
         a = x
-        deepness = len(self.layer_sizes)
+        deepness = len(self.parameters) // 2
 
         for le in range(1, deepness):
             a_prev = a
@@ -43,7 +43,7 @@ class NeuralNetwork:
         return al
 
     def linear_activation_forward(self, a_prev, w, b):
-        z = w @ a_prev + b
+        z = (w @ a_prev) + b
         a = self.activation(z)
         return a
 
