@@ -11,16 +11,18 @@ class NeuralNetwork:
         3 neurons in the input layer, 10 neurons in the hidden layer, and 2 neurons in the output layer.
         """
         # TODO (Implement FCNNs architecture here)
-        pass
+        self.layer_sizes = layer_sizes
+        self.parameters = self.initialize_parameters_deep()
 
-    def activation(self, x):
+    @staticmethod
+    def activation(x):
         """
         The activation function of our neural network, e.g., Sigmoid, ReLU.
         :param x: Vector of a layer in our network.
         :return: Vector after applying activation function.
         """
         # TODO (Implement activation function here)
-        pass
+        return 1.0 / (1 + np.exp(-x))
 
     def forward(self, x):
         """
@@ -28,5 +30,29 @@ class NeuralNetwork:
         :param x: Input vector which is a numpy array.
         :return: Output vector
         """
-        # TODO (Implement forward function here)
-        pass
+        a = x
+        deepness = len(self.layer_sizes)
+
+        for le in range(1, deepness):
+            a_prev = a
+            a = self.linear_activation_forward(a_prev, self.parameters['W' + str(le)], self.parameters['b' + str(le)])
+
+        al = self.linear_activation_forward(a, self.parameters['W' + str(deepness)],
+                                            self.parameters['b' + str(deepness)])
+
+        return al
+
+    def linear_activation_forward(self, a_prev, w, b):
+        z = w @ a_prev + b
+        a = self.activation(z)
+        return a
+
+    def initialize_parameters_deep(self):
+        parameters = {}
+        deepness = len(self.layer_sizes)  # number of layers in the network
+
+        for le in range(1, deepness):
+            parameters['W' + str(le)] = np.random.normal(size=(self.layer_sizes[le], self.layer_sizes[le - 1]))
+            parameters['b' + str(le)] = np.zeros((self.layer_sizes[le], 1))
+
+        return parameters
