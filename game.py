@@ -150,6 +150,8 @@ if __name__ == '__main__':
     start_time = 0
     best_score = 0
     num_players = 250
+    next_gen_selection_type = 'top-k'
+    parent_selection_type = 'top-k'
 
     background_surface = pygame.image.load('Graphics/Background.jpg').convert()
 
@@ -183,7 +185,6 @@ if __name__ == '__main__':
     snail_timer = pygame.USEREVENT + 1
     # pygame.time.set_timer(snail_timer, 500)
 
-
     fly_timer = pygame.USEREVENT + 2
     # pygame.time.set_timer(fly_timer, 4750)
 
@@ -213,7 +214,8 @@ if __name__ == '__main__':
                             create_players(mode=game_mode)
                         else:
                             game_mode = "Neuroevolution"
-                            current_players = evolution.generate_new_population(num_players)
+                            current_players = evolution.generate_new_population(num_players,
+                                                                                type_of_selection=parent_selection_type)
                             prev_players = []
                             create_players(mode=game_mode, player_list=current_players)
                     if clicked_exit_btn:
@@ -238,8 +240,10 @@ if __name__ == '__main__':
                 if game_mode == "Manual":
                     game_active = False
                 else:
-                    prev_players = evolution.next_population_selection(prev_players + current_players, num_players)
-                    current_players = evolution.generate_new_population(num_players, prev_players)
+                    prev_players = evolution.next_population_selection(prev_players + current_players, num_players,
+                                                                       type_of_selection=next_gen_selection_type)
+                    current_players = evolution.generate_new_population(num_players, prev_players,
+                                                                        type_of_selection=parent_selection_type)
                     reset_timer_and_seed()
                     create_players(game_mode, player_list=prev_players + current_players)
 

@@ -36,8 +36,8 @@ class Player(pygame.sprite.Sprite):
         if self.game_mode == "Neuroevolution":
             self.fitness = 0  # Initial fitness
 
-            self.layer_sizes = [30, 25, 1]  # TODO (Design your architecture here by changing the values), 11 obstacle
-            self.nn = NeuralNetwork(layer_sizes=self.layer_sizes)
+            layer_sizes = [30, 25, 10, 1]   # TODO (Design your architecture here by changing the values),
+            self.nn = NeuralNetwork(layer_sizes=layer_sizes)
 
     def think(self, screen_width, screen_height, obstacles, player_x, player_y):
         """
@@ -137,10 +137,10 @@ class Player(pygame.sprite.Sprite):
             self.player_walk[i] = pygame.transform.flip(player_surface, flip_x=True, flip_y=False)
 
     def generate_input_layer(self, screen_width, screen_height, obstacles, player_x, player_y):
-        param = np.zeros((self.layer_sizes[0], 1))
-        for i in range(min(len(obstacles), self.layer_sizes[0] // 2)):
-            param[i * 2] = np.exp(self.layer_sizes[0] - i) / (abs(obstacles[i]['x'] - player_x) + 1)
-            param[i * 2 + 1] = (player_y - obstacles[i]['y']) * np.exp(self.layer_sizes[0] - i)
+        param = np.zeros((self.nn.layer_sizes[0], 1))
+        for i in range(min(len(obstacles), self.nn.layer_sizes[0] // 2)):
+            param[i * 2] = np.exp(self.nn.layer_sizes[0] - i) / (abs(obstacles[i]['x'] - player_x) + 1)
+            param[i * 2 + 1] = (player_y - obstacles[i]['y']) * np.exp(self.nn.layer_sizes[0] - i)
         param = self.normalize(param)
         return param
 
