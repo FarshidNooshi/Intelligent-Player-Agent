@@ -76,7 +76,10 @@ class Evolution:
         :param num_players: number of players that we return
         """
         copy_players = [self.clone_player(player) for player in players]
-        ret = copy_players.sort(key=get_fitness, reverse=True)
+        ret = copy_players
+        if type_of_selection == 'sort':
+            copy_players.sort(key=get_fitness, reverse=True)
+            ret = copy_players
         if type_of_selection == 'roulette wheel':
             ret = self.roulette_wheel(copy_players, num_players)
         elif type_of_selection == 'SUS':
@@ -169,7 +172,7 @@ class Evolution:
     def mutate(child):
         for i in range(1, len(child.nn.layer_sizes)):
             val = randint(0, 100)
-            if val > 30:
+            if val > 70:
                 params = {'W': np.random.normal(size=(child.nn.layer_sizes[i], child.nn.layer_sizes[i - 1])),
                           'b': np.zeros((child.nn.layer_sizes[i], 1))}
                 child.nn.change_layer_parameters(new_layer_parameters=params, layer_num=i)
