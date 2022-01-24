@@ -1,3 +1,5 @@
+from datetime import time, datetime
+from random import seed
 from sys import exit
 from numpy.random import randint, choice
 import numpy as np
@@ -113,6 +115,8 @@ def create_players(mode, player_list=None):
         players.add(Player(mode))
     else:
         for player in player_list:
+            player.change_gravity('left')
+            player.rect.x = 177
             players.add(player)
 
 
@@ -122,7 +126,10 @@ def update_fitness():
 
 
 def reset_timer_and_seed():
-    np.random.seed(35)
+    # seed(int(datetime.now()))
+    np.random.seed(15)  # randint(0, 100))
+    pygame.time.set_timer(snail_timer, 0)
+    pygame.time.set_timer(fly_timer, 0)
     pygame.time.set_timer(snail_timer, 500)
     pygame.time.set_timer(fly_timer, 4750)
 
@@ -142,7 +149,7 @@ if __name__ == '__main__':
     game_mode = None
     start_time = 0
     best_score = 0
-    num_players = 300
+    num_players = 250
 
     background_surface = pygame.image.load('Graphics/Background.jpg').convert()
 
