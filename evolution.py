@@ -143,20 +143,17 @@ class Evolution:
         for i in range(len(par_a.nn.layer_sizes) - 1):
             num = i + 1
             shape_1 = par_a.nn.layer_sizes[i + 1]
-            shape_2 = par_a.nn.layer_sizes[i]
-            value = randint(0, shape_2)
-            value_b = randint(0, shape_1)
-            temp = par_a.nn.parameters['W' + str(num)][0:-1][:value]
-            temp2 = par_b.nn.parameters['W' + str(num)][0:-1][value+1:]
+            value = randint(0, shape_1)
 
-            W_b = np.concatenate((par_a.nn.parameters['W' + str(num)][:, :value],
-                                 par_b.nn.parameters['W' + str(num)][:, value:]), axis=1)
-            W_a = np.concatenate((par_b.nn.parameters['W' + str(num)][:, :value],
-                                 par_a.nn.parameters['W' + str(num)][:, value:]), axis=1)
-            B_a = np.concatenate((par_a.nn.parameters['b' + str(num)][:value_b, :],
-                                 par_b.nn.parameters['b' + str(num)][value_b:, :]), axis=0)
-            B_b = np.concatenate((par_b.nn.parameters['b' + str(num)][:value_b, :],
-                                 par_a.nn.parameters['b' + str(num)][value_b:, :]), axis=0)
+            W_b = np.concatenate((par_a.nn.parameters['W' + str(num)][:value, :],
+                                 par_b.nn.parameters['W' + str(num)][value:, :]), axis=0)
+            W_a = np.concatenate((par_b.nn.parameters['W' + str(num)][:value, :],
+                                 par_a.nn.parameters['W' + str(num)][value:, :]), axis=0)
+            B_a = np.concatenate((par_a.nn.parameters['b' + str(num)][:value, :],
+                                 par_b.nn.parameters['b' + str(num)][value:, :]), axis=0)
+            B_b = np.concatenate((par_b.nn.parameters['b' + str(num)][:value, :],
+                                 par_a.nn.parameters['b' + str(num)][value:, :]), axis=0)
+
             params_a = {'W': W_b, 'b': B_b}
             params_b = {'W': W_a, 'b': B_a}
 
@@ -172,7 +169,7 @@ class Evolution:
     def mutate(child):
         for i in range(1, len(child.nn.layer_sizes)):
             val = randint(0, 100)
-            if val > 40:
+            if val > 30:
                 params = {'W': np.random.normal(size=(child.nn.layer_sizes[i], child.nn.layer_sizes[i - 1])),
                           'b': np.zeros((child.nn.layer_sizes[i], 1))}
                 child.nn.change_layer_parameters(new_layer_parameters=params, layer_num=i)
