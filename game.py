@@ -1,3 +1,5 @@
+import copy
+import json
 from datetime import time, datetime
 from random import seed
 from sys import exit
@@ -142,6 +144,8 @@ if __name__ == '__main__':
     game_font = pygame.font.Font('Font/PixelType.ttf', 40)
     small_game_font = pygame.font.Font('Font/PixelType.ttf', 30)
     title_font = pygame.font.Font('Font/PixelType.ttf', 80)
+    file = open('info.txt', 'w')
+    file.write('[')
 
     game_active = False
     evolution = Evolution()
@@ -149,9 +153,10 @@ if __name__ == '__main__':
     game_mode = None
     start_time = 0
     best_score = 0
-    num_players = 250
-    next_gen_selection_type = 'top-k'
-    parent_selection_type = 'top-k'
+    num_players = 150
+    next_gen_selection_type = 'SUS'  # (top-k, roulette wheel, SUS, sort)
+    parent_selection_type = 'roulette wheel'  # (top-k, roulette wheel, SUS, random)
+    lst = []
 
     background_surface = pygame.image.load('Graphics/Background.jpg').convert()
 
@@ -192,6 +197,8 @@ if __name__ == '__main__':
         global_variables['events'] = pygame.event.get()
         for event in global_variables['events']:
             if event.type == pygame.QUIT:
+                file.write(']')
+                file.close()
                 pygame.quit()
                 exit()
             if game_active:
@@ -219,9 +226,10 @@ if __name__ == '__main__':
                             prev_players = []
                             create_players(mode=game_mode, player_list=current_players)
                     if clicked_exit_btn:
+                        file.write(']')
+                        file.close()
                         pygame.quit()
                         exit()
-
         if game_active:
             screen.blit(background_surface, (0, 0))
 
@@ -241,12 +249,12 @@ if __name__ == '__main__':
                     game_active = False
                 else:
                     prev_players = evolution.next_population_selection(prev_players + current_players, num_players,
+                                                                       file_to_write=file,
                                                                        type_of_selection=next_gen_selection_type)
-                    current_players = evolution.generate_new_population(num_players, prev_players,
+                    current_players = evolution.generate_new_population(num_players, prev_players=prev_players,
                                                                         type_of_selection=parent_selection_type)
                     reset_timer_and_seed()
                     create_players(game_mode, player_list=prev_players + current_players)
-
                     generation += 1
                     start_time = pygame.time.get_ticks()
 
@@ -274,3 +282,4 @@ if __name__ == '__main__':
             draw_intro_text("Amirkabir University of Technology", height=650, color='#AB8CD5')
         pygame.display.update()
         clock.tick(60)
+

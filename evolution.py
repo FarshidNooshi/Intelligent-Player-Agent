@@ -1,19 +1,22 @@
 import copy
+import json
 import random
 from random import choice, randint, seed
 
 import numpy as np
+from numpy import shape
 
 from player import Player
 
 
-def get_fittness(elem):
+def get_fitness(elem):
     return elem.fitness
 
 
 class Evolution:
     def __init__(self):
         self.game_mode = "Neuroevolution"
+        self.write = False
 
     def roulette_wheel(self, items, num_items):
         probabilities = self.get_probability_list(items)
@@ -63,7 +66,7 @@ class Evolution:
         points = [start_point + i * point_distance for i in range(num_items)]
         return points
 
-    def next_population_selection(self, players, num_players, type_of_selection='sort'):
+    def next_population_selection(self, players, num_players, file_to_write, type_of_selection='sort'):
         """
         Gets list of previous and current players (μ + λ) and returns num_players number of players based on their
         fitness value.
@@ -72,20 +75,22 @@ class Evolution:
         :param players: list of players in the previous generation
         :param num_players: number of players that we return
         """
-        # TODO (Implement top-k algorithm here)
-        # TODO (Additional: Implement roulette wheel here)
-        # TODO (Additional: Implement SUS here)
         copy_players = [self.clone_player(player) for player in players]
-        if type_of_selection == 'sort':
-            copy_players.sort(key=get_fittness, reverse=True)
-            return copy_players[: num_players]
-        elif type_of_selection == 'roulette wheel':
-            return self.roulette_wheel(copy_players, num_players)
+        ret = copy_players.sort(key=get_fitness, reverse=True)
+        if type_of_selection == 'roulette wheel':
+            ret = self.roulette_wheel(copy_players, num_players)
         elif type_of_selection == 'SUS':
-            return self.sus(copy_players, num_players)
+            ret = self.sus(copy_players, num_players)
         elif type_of_selection == 'top-k':
-            return self.top_k(copy_players, num_items=num_players, k=10)
-        # TODO (Additional: Learning curve)
+            ret = self.top_k(copy_players, num_items=num_players, k=len(copy_players) // 2)
+        temp = (sorted(ret, key=get_fitness, reverse=True))
+        sm_fitness = sum([pl.fitness for pl in ret])
+        if self.write:
+            file_to_write.write(',' + str([temp[0].fitness, temp[len(temp) - 1].fitness, sm_fitness / num_players]))
+        else:
+            file_to_write.write(str([temp[0].fitness, temp[len(temp) - 1].fitness, sm_fitness / num_players]))
+            self.write = True
+        return ret
 
     def generate_new_population(self, num_players, prev_players=None, type_of_selection='random'):
         """
@@ -98,9 +103,10 @@ class Evolution:
         """
         first_generation = prev_players is None
         if first_generation:
-            return [Player(self.game_mode) for _ in range(num_players)]
+            ret_players = [Player(self.game_mode) for _ in range(num_players)]
+            return ret_players
         else:
-            print(str(max(prev_players, key=get_fittness).fitness) + '\n')
+            print(str(max(prev_players, key=get_fitness).fitness) + '\n')
             # TODO ( Parent selection and child generation )
             new_players = []
             for iteration in range(num_players):
@@ -127,19 +133,33 @@ class Evolution:
         elif type_of_selection == 'SUS':
             par_a, par_b = self.sus(prev_players, 2)
         elif type_of_selection == 'top-k':
-            par_a, par_b = self.top_k(prev_players, 2, k=10)
+            par_a, par_b = self.top_k(prev_players, 2, k=20)
         return par_a, par_b
 
     def generate_children(self, par_a, par_b):
-        value = randint(0, len(par_a.la))
+        value = randint(0, len(par_a.nn.layer_sizes) - 1)
         child_a = self.clone_player(par_a)
         child_b = self.clone_player(par_b)
-        for i in range(value):
+        for i in range(len(par_a.nn.layer_sizes) - 1):
             num = i + 1
-            params_a = {'W': par_b.nn.parameters['W' + str(num)],
-                        'b': par_b.nn.parameters['b' + str(num)]}
-            params_b = {'W': par_a.nn.parameters['W' + str(num)],
-                        'b': par_a.nn.parameters['b' + str(num)]}
+            shape_1 = par_a.nn.layer_sizes[i + 1]
+            shape_2 = par_a.nn.layer_sizes[i]
+            value = randint(0, shape_2)
+            value_b = randint(0, shape_1)
+            temp = par_a.nn.parameters['W' + str(num)][0:-1][:value]
+            temp2 = par_b.nn.parameters['W' + str(num)][0:-1][value+1:]
+
+            W_b = np.concatenate((par_a.nn.parameters['W' + str(num)][:, :value],
+                                 par_b.nn.parameters['W' + str(num)][:, value:]), axis=1)
+            W_a = np.concatenate((par_b.nn.parameters['W' + str(num)][:, :value],
+                                 par_a.nn.parameters['W' + str(num)][:, value:]), axis=1)
+            B_a = np.concatenate((par_a.nn.parameters['b' + str(num)][:value_b, :],
+                                 par_b.nn.parameters['b' + str(num)][value_b:, :]), axis=0)
+            B_b = np.concatenate((par_b.nn.parameters['b' + str(num)][:value_b, :],
+                                 par_a.nn.parameters['b' + str(num)][value_b:, :]), axis=0)
+            params_a = {'W': W_b, 'b': B_b}
+            params_b = {'W': W_a, 'b': B_a}
+
             child_a.nn.change_layer_parameters(new_layer_parameters=params_a, layer_num=num)
             child_b.nn.change_layer_parameters(new_layer_parameters=params_b, layer_num=num)
         child_a.fitness = 0
@@ -150,9 +170,9 @@ class Evolution:
 
     @staticmethod
     def mutate(child):
-        for i in range(1, len(child.layer_sizes)):
+        for i in range(1, len(child.nn.layer_sizes)):
             val = randint(0, 100)
-            if val > 30:
+            if val > 40:
                 params = {'W': np.random.normal(size=(child.nn.layer_sizes[i], child.nn.layer_sizes[i - 1])),
                           'b': np.zeros((child.nn.layer_sizes[i], 1))}
                 child.nn.change_layer_parameters(new_layer_parameters=params, layer_num=i)

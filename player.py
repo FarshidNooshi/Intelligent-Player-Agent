@@ -36,7 +36,7 @@ class Player(pygame.sprite.Sprite):
         if self.game_mode == "Neuroevolution":
             self.fitness = 0  # Initial fitness
 
-            layer_sizes = [30, 25, 10, 1]   # TODO (Design your architecture here by changing the values),
+            layer_sizes = [10, 15, 2]   # TODO (Design your architecture here by changing the values),
             self.nn = NeuralNetwork(layer_sizes=layer_sizes)
 
     def think(self, screen_width, screen_height, obstacles, player_x, player_y):
@@ -55,7 +55,7 @@ class Player(pygame.sprite.Sprite):
         # TODO (change player's gravity here by calling self.change_gravity)
         inp = self.generate_input_layer(screen_width, screen_height, obstacles, player_x, player_y)
         output = self.nn.forward(inp)
-        if output[0] >= .5:
+        if output[0] >= output[1]:
             self.change_gravity('left')
         else:
             self.change_gravity('right')
@@ -149,5 +149,5 @@ class Player(pygame.sprite.Sprite):
         var = np.var(param)
         mean = np.mean(param)
         sqrt_var = np.sqrt(var)
-        param = (param - mean) / sqrt_var
+        param = (param - mean) / sqrt_var if sqrt_var != 0 else np.zeros((len(param), 1))
         return param
