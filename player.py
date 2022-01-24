@@ -138,7 +138,7 @@ class Player(pygame.sprite.Sprite):
 
     @staticmethod
     def generate_input_layer(screen_width, screen_height, obstacles, player_x, player_y):
-        param = np.arange(0, 24, 1)
+        param = np.zeros((24, 1))
         param[0] = player_x
         param[1] = player_y
         for i in range(min(11, len(obstacles))):
