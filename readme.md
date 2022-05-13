@@ -1,4 +1,4 @@
-# Snail jumper
+# Snail Jumper
 **Neuroevolution game assignment.**  
 **Fall 2021 - Computer Intelligence.**  
 
